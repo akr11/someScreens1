@@ -14,6 +14,8 @@ extension UsersViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         SwiftyBeaver.debug("willDisplay curPageNumber = \(curPageNumber), indexPath.row = \(indexPath.row )")
+//        let currentPath = networkMonitor.currentPath
+//        handleNetworkPathUpdate(currentPath)
         if indexPath.row == ((Configuration.perPage * curPageNumber) - 1) {
             curPageNumber = curPageNumber + 1
             SwiftyBeaver.debug("willDisplay curPageNumber = \(curPageNumber)")

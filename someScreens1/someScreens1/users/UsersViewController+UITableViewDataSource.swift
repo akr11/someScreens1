@@ -96,7 +96,7 @@ extension UsersViewController: UITableViewDataSource {
 
                             })
                             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                            self.present(alert, animated: true)
+//                            self.present(alert, animated: true)
                         case .failure(let error):
                             SwiftyBeaver.debug("Some error: \(error)")
                         }

@@ -9,6 +9,7 @@ import UIKit
 import CoreData
 import Kingfisher
 import SwiftyBeaver
+import Network
 
 
 
@@ -22,17 +23,146 @@ class UsersViewController: UIViewController, NSFetchedResultsControllerDelegate 
     var curPageNumber: Int = 1
     var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>!
     var portionIsSaved: Bool = false
+    
+    private let refreshControl = UIRefreshControl()
 
-    private let networkMonitor = NetworkMonitor.shared
+    private let networkManager = NetworkManager.shared
+    private var networkObserver: NSObjectProtocol?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupObservers()
+        setupNetworkObserver()
+        setupRefreshControl()
 
         curTableView.register(UINib(nibName: "UserTableViewCell", bundle: nil), forCellReuseIdentifier: "UserTableViewCell")
         initializeFetchedResultsController()
         curPageNumber = 1
         portionIsSaved = false
+        
+        // Check initial network status
+        checkNetworkStatus()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                KingfisherManager.shared.cache.calculateDiskStorageSize { result in
+                    switch result {
+                    case .success(let size):
+                        let sizeInMB = Double(size) / 1024 / 1024
+                        let alert = UIAlertController(title: nil, message: String(format: "Kingfisher Disk Cache: %.2fMB", sizeInMB), preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: "Purge", style: .destructive) { _ in
+
+                        })
+                        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+//                        self.present(alert, animated: true)
+                    case .failure(let error):
+                        SwiftyBeaver.debug("Some error: \(error)")
+                    }
+                }
+            }
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        // Check network status before making API call
+        if networkManager.isConnected {
+            loadUsers()
+        } else {
+            showNoInternetConnection()
+        }
+        
+        curTableView.reloadData()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        removeNetworkObserver()
+    }
+
+    // MARK: - Network Monitoring
+    
+    private func setupNetworkObserver() {
+        networkObserver = NotificationCenter.default.addObserver(
+            forName: NetworkManager.networkStatusChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleNetworkStatusChange(notification: notification)
+        }
+    }
+    
+    private func setupRefreshControl() {
+        refreshControl.attributedTitle = NSAttributedString(string: "Pull to refresh")
+        refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
+        curTableView.refreshControl = refreshControl
+    }
+    
+    @objc private func refreshData() {
+        SwiftyBeaver.info("🔄 Refresh control triggered")
+        
+        // Reset page number for fresh data
+        curPageNumber = 1
+        
+        // Check network before loading
+        if networkManager.isConnected {
+            loadUsers()
+        } else {
+            showNoInternetConnection()
+            refreshControl.endRefreshing()
+        }
+    }
+    
+    private func removeNetworkObserver() {
+        if let observer = networkObserver {
+            NotificationCenter.default.removeObserver(observer)
+            networkObserver = nil
+        }
+    }
+    
+    private func handleNetworkStatusChange(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let isConnected = userInfo["isConnected"] as? Bool,
+              let wasConnected = userInfo["wasConnected"] as? Bool else {
+            return
+        }
+        
+        SwiftyBeaver.info("📱 UsersViewController: Network status changed: isConnected=\(isConnected), wasConnected=\(wasConnected)")
+        
+        if !wasConnected && isConnected {
+            // Network became available
+            SwiftyBeaver.info("✅ Network became available, loading users")
+            loadUsers()
+        } else if wasConnected && !isConnected {
+            // Network became unavailable
+            SwiftyBeaver.warning("❌ Network became unavailable, showing no internet connection screen")
+            showNoInternetConnection()
+            refreshControl.endRefreshing()
+        }
+    }
+    
+    private func checkNetworkStatus() {
+        SwiftyBeaver.info("🔍 Checking initial network status: \(networkManager.isConnected)")
+        if !networkManager.isConnected {
+            SwiftyBeaver.warning("❌ No internet connection detected, showing no internet connection screen")
+            showNoInternetConnection()
+        }
+    }
+    
+    private func showNoInternetConnection() {
+        // Check if we're not already showing the no internet connection screen
+        if !(navigationController?.viewControllers.last is NoInternetConnectionViewController) {
+            SwiftyBeaver.info("🔄 Performing segue to noInternetConnection")
+            performSegue(withIdentifier: "noInternetConnection", sender: self)
+        } else {
+            SwiftyBeaver.info("ℹ️ NoInternetConnectionViewController is already showing")
+        }
+    }
+    
+    private func loadUsers() {
+        SwiftyBeaver.info("📡 Loading users from API, page: \(curPageNumber)")
         ApiManager.shared().getUsers(curPageNumber: curPageNumber, completion: {  (data, response, error) in
             SwiftyBeaver.debug("data = \(String(describing: data))")
             SwiftyBeaver.debug("response = \(String(describing: response))")
@@ -45,7 +175,10 @@ class UsersViewController: UIViewController, NSFetchedResultsControllerDelegate 
 
             else {
                 if (error?.localizedDescription) != nil {
-                    SwiftyBeaver.debug((error?.localizedDescription)! as String)
+                    SwiftyBeaver.error("❌ API Error: \((error?.localizedDescription)! as String)")
+                }
+                DispatchQueue.main.async {
+                    self.refreshControl.endRefreshing()
                 }
                 return
             }
@@ -60,59 +193,38 @@ class UsersViewController: UIViewController, NSFetchedResultsControllerDelegate 
                 SwiftyBeaver.debug("json = \(json)")
                 if let arU = (json["users"] as? [Dictionary<String, AnyObject>]),
                    arU.count > 0 {
+                    SwiftyBeaver.info("✅ Received \(arU.count) users from API")
                     DispatchQueue.main.async {
                         self.noUsersLabel.superview?.sendSubviewToBack(self.noUsersLabel)
                         self.noUsersImageView.superview?.sendSubviewToBack(self.noUsersImageView)
+                        self.refreshControl.endRefreshing()
                     }
                     do {
                         try self.treatmentUsers(
                             usersCur: arU
                         )
                     } catch {
-                        SwiftyBeaver.debug(error)
+                        SwiftyBeaver.error("❌ Error treating users: \(error)")
+                        DispatchQueue.main.async {
+                            self.refreshControl.endRefreshing()
+                        }
                     }
                 } else {
+                    SwiftyBeaver.info("ℹ️ No users received from API")
                     DispatchQueue.main.async {
                         self.noUsersLabel.superview?.bringSubviewToFront(self.noUsersLabel)
                         self.noUsersImageView.superview?.bringSubviewToFront(self.noUsersImageView)
+                        self.refreshControl.endRefreshing()
                     }
                 }
             } catch let error as NSError {
-                SwiftyBeaver.debug(error.localizedDescription)
+                SwiftyBeaver.error("❌ JSON parsing error: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.refreshControl.endRefreshing()
+                }
             }
 
         })
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                KingfisherManager.shared.cache.calculateDiskStorageSize { result in
-                    switch result {
-                    case .success(let size):
-                        let sizeInMB = Double(size) / 1024 / 1024
-                        let alert = UIAlertController(title: nil, message: String(format: "Kingfisher Disk Cache: %.2fMB", sizeInMB), preferredStyle: .alert)
-                        alert.addAction(UIAlertAction(title: "Purge", style: .destructive) { _ in
-
-                        })
-                        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                        self.present(alert, animated: true)
-                    case .failure(let error):
-                        SwiftyBeaver.debug("Some error: \(error)")
-                    }
-                }
-            }
-    }
-
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-//        ApiManager.shared().getUsers { [weak self] users in
-//            guard let self = self else { return }
-//            self.users = users
-//            self.curTableView.reloadData()
-//        }
-
-//        users = DataManager.shared.users
-        
-        curTableView.reloadData()
-        
-//        updateUI()
     }
 
     //MARK: - fetched controller
@@ -278,44 +390,10 @@ class UsersViewController: UIViewController, NSFetchedResultsControllerDelegate 
         return nil
     }
 
-    private func setupObservers() {
-            // Using NotificationCenter to observe network changes
-            NotificationCenter.default.addObserver(forName: NSNotification.Name("NetworkStatusChanged"), object: nil, queue: .main) { [weak self] _ in
-                self?.updateUI()
-            }
-
-            // Alternative: poll the status periodically
-            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-                self?.updateUI()
-            }
-        }
-
-    private func updateUI() {
-            let isConnected = networkMonitor.isConnected
-
-        if isConnected == false {
-            performSegue(withIdentifier: "noInternet", sender: self)
-        } else {
-
-        }
-
-            // Update image
-//            statusImageView.image = UIImage(systemName: isConnected ? "wifi" : "wifi.slash")
-//            statusImageView.tintColor = isConnected ? .systemGreen : .systemRed
-//
-//            // Update labels
-//            statusLabel.text = isConnected ? "Connected" : "No Internet Connection"
-//            statusLabel.textColor = isConnected ? .systemGreen : .systemRed
-//
-//            connectionTypeLabel.text = isConnected ? "Connection Type: \(networkMonitor.connectionType.rawValue)" : ""
-//
-//            // Update button
-//            fetchButton.isHidden = !isConnected
-        }
-
     deinit {
-            NotificationCenter.default.removeObserver(self)
-        }
+        NotificationCenter.default.removeObserver(self)
+        removeNetworkObserver()
+    }
 
     /*
     // MARK: - Navigation

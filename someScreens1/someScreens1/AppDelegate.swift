@@ -12,10 +12,14 @@ import SwiftyBeaver
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         loggerSwiftyBeaverSetttingsSetup()
+        
+        // Initialize NetworkManager to start monitoring network status
+        _ = NetworkManager.shared
+        
+        SwiftyBeaver.info("App launched, NetworkManager initialized")
+        
         return true
     }
 
@@ -99,11 +103,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         SwiftyBeaver.addDestination(console)
         SwiftyBeaver.addDestination(file)
 
-        // Now let’s log!
+        // Now let's log!
         SwiftyBeaver.verbose("not so important")  // prio 1, VERBOSE in silver
         SwiftyBeaver.debug("something to debug")  // prio 2, DEBUG in green
         SwiftyBeaver.info("a nice information")   // prio 3, INFO in blue
-        SwiftyBeaver.warning("oh no, that won’t be good")  // prio 4, WARNING in yellow
+        SwiftyBeaver.warning("oh no, that won't be good")  // prio 4, WARNING in yellow
         SwiftyBeaver.error("ouch, an error did occur!")  // prio 5, ERROR in red
 
         // log anything!

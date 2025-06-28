@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		830339DA2DBADC4E006CA7C6 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 830339D92DBADC4E006CA7C6 /* Kingfisher */; };
 		83E7E1032DC91E5100E54EFE /* SwiftyBeaver in Frameworks */ = {isa = PBXBuildFile; productRef = 83E7E1022DC91E5100E54EFE /* SwiftyBeaver */; };
+		83FB113B2E055F8B008CCF53 /* PhoneNumberKit in Frameworks */ = {isa = PBXBuildFile; productRef = 83FB113A2E055F8B008CCF53 /* PhoneNumberKit */; };
+		83FB113D2E055F8B008CCF53 /* PhoneNumberKit-Static in Frameworks */ = {isa = PBXBuildFile; productRef = 83FB113C2E055F8B008CCF53 /* PhoneNumberKit-Static */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +72,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				83FB113B2E055F8B008CCF53 /* PhoneNumberKit in Frameworks */,
+				83FB113D2E055F8B008CCF53 /* PhoneNumberKit-Static in Frameworks */,
 				830339DA2DBADC4E006CA7C6 /* Kingfisher in Frameworks */,
 				83E7E1032DC91E5100E54EFE /* SwiftyBeaver in Frameworks */,
 			);
@@ -134,6 +138,8 @@
 			packageProductDependencies = (
 				830339D92DBADC4E006CA7C6 /* Kingfisher */,
 				83E7E1022DC91E5100E54EFE /* SwiftyBeaver */,
+				83FB113A2E055F8B008CCF53 /* PhoneNumberKit */,
+				83FB113C2E055F8B008CCF53 /* PhoneNumberKit-Static */,
 			);
 			productName = someScreens1;
 			productReference = 83324CB72DB7E1D6001CD32A /* someScreens1.app */;
@@ -220,6 +226,7 @@
 			packageReferences = (
 				830339D82DBADC4E006CA7C6 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				83E7E1012DC91E5100E54EFE /* XCRemoteSwiftPackageReference "SwiftyBeaver" */,
+				83FB11392E055F8B008CCF53 /* XCRemoteSwiftPackageReference "PhoneNumberKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 83324CB82DB7E1D6001CD32A /* Products */;
@@ -305,11 +312,11 @@
 				DEVELOPMENT_TEAM = EFA22Y27VT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = someScreens1/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "This application wants to take photos";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -333,11 +340,11 @@
 				DEVELOPMENT_TEAM = EFA22Y27VT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = someScreens1/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "This application wants to take photos";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -602,6 +609,14 @@
 				minimumVersion = 2.1.1;
 			};
 		};
+		83FB11392E055F8B008CCF53 /* XCRemoteSwiftPackageReference "PhoneNumberKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/marmelroy/PhoneNumberKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -614,6 +629,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 83E7E1012DC91E5100E54EFE /* XCRemoteSwiftPackageReference "SwiftyBeaver" */;
 			productName = SwiftyBeaver;
+		};
+		83FB113A2E055F8B008CCF53 /* PhoneNumberKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 83FB11392E055F8B008CCF53 /* XCRemoteSwiftPackageReference "PhoneNumberKit" */;
+			productName = PhoneNumberKit;
+		};
+		83FB113C2E055F8B008CCF53 /* PhoneNumberKit-Static */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 83FB11392E055F8B008CCF53 /* XCRemoteSwiftPackageReference "PhoneNumberKit" */;
+			productName = "PhoneNumberKit-Static";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

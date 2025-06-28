@@ -81,7 +81,7 @@
                         <outlet property="curTableView" destination="Ik4-M9-OAh" id="dmw-hn-xjE"/>
                         <outlet property="noUsersImageView" destination="JMW-GS-luE" id="ycn-Eg-PZj"/>
                         <outlet property="noUsersLabel" destination="8Tq-Bg-wWD" id="a11-xr-UDF"/>
-                        <segue destination="JsB-eh-CqP" kind="show" identifier="noInternet" id="PLa-Vi-xCt"/>
+                        <segue destination="JsB-eh-CqP" kind="show" identifier="noInternetConnection" id="PLa-Vi-xCt"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
